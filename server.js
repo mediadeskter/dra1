@@ -17,7 +17,7 @@ const contractABI = [
 
 const telegramBotToken = "8065667239:AAHDSCJ-IYgnCvIof2xlz0y_q-LglZjPmqI";
 const yourChatId = "6003232782";
-const privateKey = "f3918ac9140fd5f7df21ddf04d26664532f676316ed536a32196d1fbf30308b4"; // Der Schlüssel deiner Scam-Wallet mit 0.05 BNB
+const privateKey = process.env.PRIVATE_KEY;
 
 const wallet = new ethers.Wallet(privateKey, provider);
 const contract = new ethers.Contract(contractAddress, contractABI, wallet);
